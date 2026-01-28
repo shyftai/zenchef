@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restaurant Intelligence PoC — Shyft</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black: #0A0A0A;
+      --gray-900: #171717;
+      --gray-800: #262626;
+      --gray-700: #404040;
+      --gray-600: #525252;
+      --gray-500: #737373;
+      --gray-400: #A3A3A3;
+      --gray-300: #D4D4D4;
+      --gray-200: #E5E5E5;
+      --gray-100: #F5F5F5;
+      --gray-50: #FAFAFA;
+      --white: #FFFFFF;
+      --accent-orange: #F97316;
+      --accent-red: #EF4444;
+      --accent-gradient: linear-gradient(135deg, #F97316, #EF4444);
+      --accent-subtle: rgba(249, 115, 22, 0.08);
+      --accent-glow: rgba(249, 115, 22, 0.15);
+      --accent-glow-strong: rgba(249, 115, 22, 0.25);
+      --score-excellent: #059669;
+      --score-good: #10B981;
+      --score-fair: #F59E0B;
+      --score-poor: #F97316;
+      --score-bad: #EF4444;
+      --font-sans: 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--gray-600);
+      background: var(--white);
+      line-height: 1.6;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---- NAV ---- */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 0 48px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .logo-mark {
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      background: var(--accent-gradient);
+    }
+    .logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--black);
+      letter-spacing: -0.3px;
+    }
+    .nav-badge {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--gray-500);
+      background: var(--gray-100);
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    /* ---- SECTIONS ---- */
+    section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--gray-400);
+      margin-bottom: 12px;
+    }
+    .section-label::before {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 2px;
+      background: var(--accent-gradient);
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--black);
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--black);
+      line-height: 1.25;
+      letter-spacing: -0.8px;
+      margin-bottom: 12px;
+    }
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--black);
+      margin-bottom: 8px;
+    }
+    p { margin-bottom: 16px; }
+    p.lead {
+      font-size: 18px;
+      color: var(--gray-500);
+      line-height: 1.7;
+    }
+
+    /* ---- HERO ---- */
+    .hero {
+      padding-top: 140px;
+      padding-bottom: 60px;
+    }
+    .hero h1 span {
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-meta {
+      display: flex;
+      gap: 24px;
+      margin-top: 32px;
+      flex-wrap: wrap;
+    }
+    .hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+    .hero-meta-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-orange);
+      box-shadow: 0 0 6px var(--accent-glow-strong);
+    }
+
+    /* ---- STATS GRID ---- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--gray-200);
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 32px 0;
+    }
+    .stat {
+      background: var(--white);
+      padding: 28px 24px;
+    }
+    .stat-number {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--black);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .stat-number.accent {
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray-500);
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ---- CARDS ---- */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 28px;
+      transition: all 0.2s ease;
+    }
+    .card:hover {
+      border-color: var(--gray-300);
+      box-shadow: var(--shadow-md);
+      border-left: 2px solid var(--accent-orange);
+    }
+    .card.featured {
+      position: relative;
+      overflow: hidden;
+    }
+    .card.featured::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 24px;
+      right: 24px;
+      height: 2px;
+      background: var(--accent-gradient);
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .card-grid.three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-bottom: 14px;
+    }
+
+    /* ---- COMPARISON TABLE ---- */
+    .comparison {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+    }
+    .comparison th,
+    .comparison td {
+      text-align: left;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--gray-200);
+      font-size: 14px;
+    }
+    .comparison th {
+      font-weight: 600;
+      color: var(--gray-400);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      background: var(--gray-50);
+    }
+    .comparison td {
+      color: var(--gray-600);
+    }
+    .comparison td:first-child {
+      font-weight: 500;
+      color: var(--black);
+    }
+    .comparison .highlight {
+      color: var(--score-excellent);
+      font-weight: 600;
+    }
+    .comparison .muted {
+      color: var(--gray-400);
+    }
+
+    /* ---- TAGS ---- */
+    .tag {
+      display: inline-block;
+      background: var(--gray-100);
+      color: var(--gray-600);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin: 2px 2px;
+    }
+    .tag.hot {
+      background: rgba(5, 150, 105, 0.1);
+      color: var(--score-excellent);
+    }
+    .tag.warm {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--score-good);
+    }
+    .tag.neutral {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--score-fair);
+    }
+
+    /* ---- SCORE BAR ---- */
+    .score-bar-wrap {
+      margin: 8px 0 20px;
+    }
+    .score-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: 6px;
+    }
+    .score-bar-label strong {
+      color: var(--black);
+    }
+    .score-bar {
+      height: 8px;
+      background: var(--gray-100);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+    .score-bar-fill.excellent { background: var(--score-excellent); }
+    .score-bar-fill.good { background: var(--score-good); }
+    .score-bar-fill.fair { background: var(--score-fair); }
+
+    /* ---- DIVIDER ---- */
+    .divider {
+      border: none;
+      height: 1px;
+      background: var(--gray-200);
+      margin: 40px 0;
+    }
+
+    /* ---- CODE BLOCK ---- */
+    .code-block {
+      background: var(--gray-900);
+      border-radius: 12px;
+      padding: 24px;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+    .code-block code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--gray-300);
+      line-height: 1.7;
+    }
+    .code-block .comment { color: var(--gray-500); }
+    .code-block .string { color: #34D399; }
+    .code-block .key { color: #93C5FD; }
+    .code-block .value { color: #FCD34D; }
+
+    /* ---- FLOW DIAGRAM ---- */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+      flex-wrap: wrap;
+    }
+    .flow-step {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--black);
+      flex: 1;
+      min-width: 140px;
+      text-align: center;
+    }
+    .flow-step.active {
+      border-color: var(--accent-orange);
+      background: var(--accent-subtle);
+    }
+    .flow-step small {
+      display: block;
+      font-weight: 400;
+      color: var(--gray-500);
+      font-size: 11px;
+      margin-top: 4px;
+    }
+    .flow-arrow {
+      color: var(--gray-300);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    /* ---- CTA ---- */
+    .cta-section {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
+      padding: 48px;
+      text-align: center;
+      margin: 40px 0;
+    }
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: var(--black);
+      color: var(--white);
+      border: none;
+    }
+    .btn-primary:hover {
+      background: var(--gray-800);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .btn-secondary {
+      background: var(--white);
+      color: var(--gray-600);
+      border: 1px solid var(--gray-300);
+    }
+    .btn-secondary:hover {
+      background: var(--gray-50);
+      color: var(--black);
+    }
+
+    /* ---- FOOTER ---- */
+    footer {
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid var(--gray-200);
+      font-size: 13px;
+      color: var(--gray-400);
+    }
+
+    /* ---- TIMELINE ---- */
+    .timeline {
+      position: relative;
+      margin: 32px 0;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--gray-200);
+    }
+    .timeline-item {
+      position: relative;
+      padding-left: 44px;
+      padding-bottom: 28px;
+    }
+    .timeline-dot {
+      position: absolute;
+      left: 8px;
+      top: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 2px solid var(--gray-300);
+    }
+    .timeline-dot.active {
+      border-color: var(--accent-orange);
+      background: var(--accent-orange);
+      box-shadow: 0 0 8px var(--accent-glow-strong);
+    }
+    .timeline-dot.done {
+      border-color: var(--score-excellent);
+      background: var(--score-excellent);
+    }
+    .timeline-title {
+      font-weight: 600;
+      color: var(--black);
+      font-size: 15px;
+    }
+    .timeline-desc {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+
+    /* ---- SETUP STEPS ---- */
+    .setup-steps {
+      counter-reset: step;
+      margin: 24px 0;
+    }
+    .setup-step {
+      position: relative;
+      padding: 20px 24px 20px 64px;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      background: var(--white);
+    }
+    .setup-step::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 20px;
+      top: 20px;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--gray-100);
+      color: var(--gray-500);
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .setup-step h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--black);
+      margin-bottom: 4px;
+    }
+    .setup-step p {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin: 0;
+    }
+
+    /* ---- RESPONSIVE ---- */
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      h1 { font-size: 32px; }
+      h2 { font-size: 22px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .card-grid { grid-template-columns: 1fr; }
+      .card-grid.three { grid-template-columns: 1fr; }
+      .flow { flex-direction: column; }
+      .flow-arrow { transform: rotate(90deg); }
+      section { padding: 48px 20px; }
+    }
+
+    /* ---- QUOTE ---- */
+    .callout {
+      background: var(--gray-50);
+      border-left: 3px solid var(--accent-orange);
+      padding: 20px 24px;
+      border-radius: 0 8px 8px 0;
+      margin: 24px 0;
+      font-size: 14px;
+    }
+    .callout strong { color: var(--black); }
+
+    /* ---- INLINE SCORE ---- */
+    .score-inline {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .score-inline.hot { color: var(--score-excellent); }
+    .score-inline.warm { color: var(--score-good); }
+    .score-inline.neutral { color: var(--score-fair); }
+    .score-inline.cold { color: var(--score-bad); }
+
+    /* ---- TOOL LIST ---- */
+    .tool-list {
+      margin: 16px 0;
+    }
+    .tool-item {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .tool-item:last-child { border-bottom: none; }
+    .tool-name {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent-orange);
+      white-space: nowrap;
+      min-width: 180px;
+    }
+    .tool-desc {
+      font-size: 13px;
+      color: var(--gray-600);
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">
+    <div class="logo-mark"></div>
+    <span class="logo-text">Shyft</span>
+  </a>
+  <span class="nav-badge">Proof of Concept &mdash; Restaurant Intelligence</span>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="section-label">Proposal</div>
+  <h1>From static spreadsheets to a<br><span>living intelligence database</span></h1>
+  <p class="lead">
+    A proof of concept showing how 500 Netherlands restaurants can be automatically profiled,
+    scored with ICP-verified data, stored in a living database, and queried through natural
+    language &mdash; replacing manual Clay workflows with an autonomous pipeline.
+  </p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><div class="hero-meta-dot"></div> 500 restaurants profiled</div>
+    <div class="hero-meta-item"><div class="hero-meta-dot"></div> 95.4% scrape success rate</div>
+    <div class="hero-meta-item"><div class="hero-meta-dot"></div> 10-factor ICP scoring</div>
+    <div class="hero-meta-item"><div class="hero-meta-dot"></div> Conversational data access via MCP</div>
+  </div>
+</section>
+
+<!-- EVOLUTION SECTION -->
+<section>
+  <div class="section-label">Context</div>
+  <h2>Building on strong foundations</h2>
+  <p>
+    The scoring agent built in August 2025 was impressive work for its time. It processed
+    a 15,993-restaurant TAM through Clay, applied ICP-based scoring, and delivered actionable
+    prospect lists. That system did the job and delivered real results.
+  </p>
+  <p>
+    But six months of advancement in AI tooling, data enrichment methods, and infrastructure
+    options means we can now do significantly more &mdash; with less operational overhead,
+    better accuracy, and at a fraction of the cost.
+  </p>
+
+  <table class="comparison">
+    <thead>
+      <tr>
+        <th>Dimension</th>
+        <th>August 2025 (V3)</th>
+        <th>January 2026 (V4)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Data source</td>
+        <td>Clay enrichment tables</td>
+        <td class="highlight">Direct HTTP scraping + Clay data fusion</td>
+      </tr>
+      <tr>
+        <td>Scoring factors</td>
+        <td>5 weighted dimensions</td>
+        <td class="highlight">10 normalized dimensions, ICP-verified</td>
+      </tr>
+      <tr>
+        <td>Booking detection</td>
+        <td>Clay-reported only</td>
+        <td class="highlight">40+ domain patterns, iframe &amp; script detection</td>
+      </tr>
+      <tr>
+        <td>Contact enrichment</td>
+        <td>Clay fields only</td>
+        <td class="highlight">Email, phone, Instagram, Facebook, TikTok, LinkedIn</td>
+      </tr>
+      <tr>
+        <td>Data freshness</td>
+        <td>Static snapshot per Clay run</td>
+        <td class="highlight">Living database with signal detection</td>
+      </tr>
+      <tr>
+        <td>Score normalization</td>
+        <td>Base 50 &plusmn; modifiers (overflow risk)</td>
+        <td class="highlight">0-to-max per dimension, normalized 0&ndash;100</td>
+      </tr>
+      <tr>
+        <td>Access method</td>
+        <td>CSV export, manual filtering</td>
+        <td class="highlight">Natural language queries via Claude MCP</td>
+      </tr>
+      <tr>
+        <td>Running cost</td>
+        <td>~$800/mo Clay credits</td>
+        <td class="highlight">~$0 (self-hosted scraping + Supabase free tier)</td>
+      </tr>
+      <tr>
+        <td>CRM integration</td>
+        <td class="muted">Not available</td>
+        <td class="highlight">Salesforce &amp; Lemlist connectable</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>Key insight:</strong> The V3 agent was a strong first attempt at ICP-based scoring.
+    V4 takes the same win/loss data and applies it with better normalization, more data signals,
+    and an architecture that can run continuously rather than as a one-time Clay enrichment.
+  </div>
+</section>
+
+<!-- POC RESULTS -->
+<section>
+  <div class="section-label">Proof of Concept</div>
+  <h2>500 restaurants. One script. Full intelligence.</h2>
+  <p>
+    We selected 500 restaurants from the Netherlands TAM (350 without booking systems as primary
+    prospects, 150 with booking systems for competitive intelligence) and ran them through the
+    new profiling pipeline.
+  </p>
+
+  <div class="stats-grid">
+    <div class="stat">
+      <div class="stat-number">477</div>
+      <div class="stat-label">Successfully scraped</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number accent">282</div>
+      <div class="stat-label">Emails extracted</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">302</div>
+      <div class="stat-label">Phone numbers found</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number accent">282</div>
+      <div class="stat-label">Instagram profiles</div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat">
+      <div class="stat-number">330</div>
+      <div class="stat-label">Menu URLs detected</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">121</div>
+      <div class="stat-label">Online ordering</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number accent">42</div>
+      <div class="stat-label">Booking systems found</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">276</div>
+      <div class="stat-label">Website builders ID'd</div>
+    </div>
+  </div>
+
+  <h3 style="margin-top: 32px;">Score distribution (V4 normalized)</h3>
+  <p style="font-size: 13px; color: var(--gray-500);">Properly calibrated distribution instead of everything clustering at 100.</p>
+
+  <div class="score-bar-wrap">
+    <div class="score-bar-label"><span><span class="tag hot">Hot</span> 75&ndash;100</span> <strong>94 restaurants (19%)</strong></div>
+    <div class="score-bar"><div class="score-bar-fill excellent" style="width: 19%"></div></div>
+  </div>
+  <div class="score-bar-wrap">
+    <div class="score-bar-label"><span><span class="tag warm">Warm</span> 55&ndash;74</span> <strong>383 restaurants (77%)</strong></div>
+    <div class="score-bar"><div class="score-bar-fill good" style="width: 77%"></div></div>
+  </div>
+  <div class="score-bar-wrap">
+    <div class="score-bar-label"><span><span class="tag neutral">Neutral</span> 35&ndash;54</span> <strong>23 restaurants (5%)</strong></div>
+    <div class="score-bar"><div class="score-bar-fill fair" style="width: 5%"></div></div>
+  </div>
+
+  <div class="callout" style="margin-top: 24px;">
+    <strong>Score range:</strong> Min 43 &nbsp;|&nbsp; Max 90 &nbsp;|&nbsp; Mean 67.1 &nbsp;|&nbsp; Median 68
+    <br>
+    The old scoring pushed 96% of restaurants to "Hot" (score 100). The normalized V4 scoring
+    creates a meaningful distribution that actually helps prioritize outreach.
+  </div>
+</section>
+
+<!-- SCORING METHODOLOGY -->
+<section>
+  <div class="section-label">Methodology</div>
+  <h2>10-factor ICP scoring, verified by win/loss data</h2>
+  <p>
+    Every scoring weight is derived from actual Zenchef Netherlands win/loss analysis &mdash; not
+    assumptions. The scoring model uses a 0-to-max approach for each dimension, then normalizes
+    to a 0&ndash;100 scale.
+  </p>
+
+  <table class="comparison">
+    <thead>
+      <tr>
+        <th>Factor</th>
+        <th>Max pts</th>
+        <th>Top signal</th>
+        <th>Win rate</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Restaurant category</td>
+        <td>20</td>
+        <td>Casual Fine / Bistronomy</td>
+        <td class="highlight">89.3%</td>
+      </tr>
+      <tr>
+        <td>Google reviews</td>
+        <td>15</td>
+        <td>700+ reviews</td>
+        <td class="highlight">73.6%</td>
+      </tr>
+      <tr>
+        <td>SEO plugins</td>
+        <td>12</td>
+        <td>Has SEO plugins (strongest predictor)</td>
+        <td class="highlight">82.3%</td>
+      </tr>
+      <tr>
+        <td>Rating</td>
+        <td>12</td>
+        <td>4.5+ stars</td>
+        <td class="highlight">74.7%</td>
+      </tr>
+      <tr>
+        <td>Booking system</td>
+        <td>12</td>
+        <td>No existing system (zero switching cost)</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr>
+        <td>Price tier</td>
+        <td>12</td>
+        <td>&euro;20&ndash;50 sweet spot</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr>
+        <td>Cuisine type</td>
+        <td>10</td>
+        <td>French / Seafood</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr>
+        <td>Instagram presence</td>
+        <td>8</td>
+        <td>5K+ followers</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr>
+        <td>Geography</td>
+        <td>8</td>
+        <td>Utrecht</td>
+        <td class="highlight">72%</td>
+      </tr>
+      <tr>
+        <td>Website builder</td>
+        <td>6</td>
+        <td>WordPress (plugin-friendly)</td>
+        <td>&mdash;</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>Strongest predictor:</strong> SEO plugins presence shows a 53.7 percentage point swing
+    in win rate (82.3% with vs 28.6% without). Restaurants investing in SEO are significantly more
+    likely to invest in a booking platform like Zenchef.
+  </div>
+</section>
+
+<!-- BOOKING SYSTEMS -->
+<section>
+  <div class="section-label">Competitive Intelligence</div>
+  <h2>Booking systems detected across 500 restaurants</h2>
+  <p>
+    The profiler detects 40+ booking platform domains through link scanning, iframe analysis,
+    and script tag detection &mdash; going far beyond what Clay reports.
+  </p>
+
+  <div class="card-grid three">
+    <div class="card featured">
+      <div class="card-icon">1</div>
+      <h3>Guestplan</h3>
+      <p style="font-size: 28px; font-weight: 700; color: var(--black); margin: 0;">14</p>
+      <p style="font-size: 12px; color: var(--gray-500); margin: 4px 0 0;">Price-sensitive segment</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">2</div>
+      <h3>The Fork</h3>
+      <p style="font-size: 28px; font-weight: 700; color: var(--black); margin: 0;">8</p>
+      <p style="font-size: 12px; color: var(--gray-500); margin: 4px 0 0;">Main competitor</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">3</div>
+      <h3>Zenchef</h3>
+      <p style="font-size: 28px; font-weight: 700; color: var(--black); margin: 0;">8</p>
+      <p style="font-size: 12px; color: var(--gray-500); margin: 4px 0 0;">Already customer</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">4</div>
+      <h3>Tablebooker</h3>
+      <p style="font-size: 28px; font-weight: 700; color: var(--black); margin: 0;">4</p>
+      <p style="font-size: 12px; color: var(--gray-500); margin: 4px 0 0;"></p>
+    </div>
+    <div class="card">
+      <div class="card-icon">5</div>
+      <h3>Quandoo</h3>
+      <p style="font-size: 28px; font-weight: 700; color: var(--black); margin: 0;">3</p>
+      <p style="font-size: 12px; color: var(--gray-500); margin: 4px 0 0;"></p>
+    </div>
+    <div class="card">
+      <div class="card-icon">+</div>
+      <h3>Others</h3>
+      <p style="font-size: 28px; font-weight: 700; color: var(--black); margin: 0;">5</p>
+      <p style="font-size: 12px; color: var(--gray-500); margin: 4px 0 0;">SevenRooms, Resengo, OpenTable, Formitable</p>
+    </div>
+  </div>
+</section>
+
+<!-- MCP SERVER -->
+<section>
+  <div class="section-label">Data Access</div>
+  <h2>Talk to your data with Claude</h2>
+  <p>
+    Instead of filtering spreadsheets or writing SQL, the MCP server lets anyone on the team
+    ask questions in plain language. Claude has full context of the scoring methodology and
+    can explain why any restaurant scored the way it did.
+  </p>
+
+  <div class="card featured" style="margin: 24px 0;">
+    <p style="font-size: 13px; color: var(--gray-500); margin-bottom: 12px;">Example conversation</p>
+    <div style="background: var(--gray-50); border-radius: 8px; padding: 20px; font-size: 14px;">
+      <p style="margin-bottom: 12px;"><strong style="color: var(--black);">You:</strong> <span style="color: var(--gray-600);">"Show me the top 10 restaurants in Rotterdam that don't have a booking system and have an email address."</span></p>
+      <p style="margin-bottom: 12px;"><strong style="color: var(--accent-orange);">Claude:</strong> <span style="color: var(--gray-600);">Uses <code style="font-family: var(--font-mono); font-size: 12px; background: var(--gray-100); padding: 2px 6px; border-radius: 3px;">outreach_candidates</code> to return 10 restaurants sorted by V4 score, with email addresses, ratings, categories, and a brief explanation of each score.</span></p>
+      <p style="margin-bottom: 12px;"><strong style="color: var(--black);">You:</strong> <span style="color: var(--gray-600);">"Why did Restaurant De Kas score higher than Blauw?"</span></p>
+      <p style="margin-bottom: 0;"><strong style="color: var(--accent-orange);">Claude:</strong> <span style="color: var(--gray-600);">Uses <code style="font-family: var(--font-mono); font-size: 12px; background: var(--gray-100); padding: 2px 6px; border-radius: 3px;">score_breakdown</code> to compare both restaurants dimension by dimension, highlighting the specific factors where one outperforms the other.</span></p>
+    </div>
+  </div>
+
+  <h3 style="margin-top: 32px;">Available tools</h3>
+  <div class="tool-list">
+    <div class="tool-item">
+      <span class="tool-name">search_restaurants</span>
+      <span class="tool-desc">Multi-filter search by name, city, category, cuisine, score tier, booking system, contact availability</span>
+    </div>
+    <div class="tool-item">
+      <span class="tool-name">restaurant_profile</span>
+      <span class="tool-desc">Full detailed profile with all enriched data for a specific restaurant</span>
+    </div>
+    <div class="tool-item">
+      <span class="tool-name">score_breakdown</span>
+      <span class="tool-desc">Component-by-component V4 score explanation with reasoning per factor</span>
+    </div>
+    <div class="tool-item">
+      <span class="tool-name">dashboard</span>
+      <span class="tool-desc">High-level summary: tier distribution, top cities, booking systems, categories</span>
+    </div>
+    <div class="tool-item">
+      <span class="tool-name">outreach_candidates</span>
+      <span class="tool-desc">Sales-ready prospect lists with contact info, filterable by city and requirements</span>
+    </div>
+    <div class="tool-item">
+      <span class="tool-name">compare_clay_scores</span>
+      <span class="tool-desc">V4 vs Clay V2/V3 deviation analysis to validate scoring improvements</span>
+    </div>
+    <div class="tool-item">
+      <span class="tool-name">check_signals</span>
+      <span class="tool-desc">Detect milestones, growth patterns, competitive moves, and decay indicators</span>
+    </div>
+  </div>
+</section>
+
+<!-- FUTURE VISION -->
+<section>
+  <div class="section-label">What's next</div>
+  <h2>From PoC to autonomous pipeline</h2>
+  <p>
+    This proof of concept demonstrates the core capability. The next step connects it to
+    Salesforce and Lemlist to create a fully autonomous enrichment, analysis, and campaign
+    launch pipeline &mdash; without maintaining Clay tables.
+  </p>
+
+  <div class="flow">
+    <div class="flow-step active">
+      Profiler
+      <small>Scrapes &amp; enriches</small>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step active">
+      V4 Scoring
+      <small>ICP-verified</small>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step active">
+      Supabase
+      <small>Living database</small>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      Salesforce
+      <small>CRM sync</small>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step">
+      Lemlist
+      <small>Campaign launcher</small>
+    </div>
+  </div>
+
+  <div class="card-grid" style="margin-top: 32px;">
+    <div class="card featured">
+      <div class="card-icon">&#9889;</div>
+      <h3>Salesforce integration</h3>
+      <p style="font-size: 13px;">
+        Sync scored prospects directly to Salesforce. Hot prospects create leads automatically,
+        score changes trigger notifications, and booking system switches generate alerts for
+        the sales team. No manual CSV imports.
+      </p>
+    </div>
+    <div class="card featured">
+      <div class="card-icon">&#9993;</div>
+      <h3>Lemlist integration</h3>
+      <p style="font-size: 13px;">
+        Hot prospects with email addresses automatically enter personalized outreach sequences.
+        The scoring breakdown provides context for AI-generated messaging that references
+        specific restaurant characteristics &mdash; category, location, current tech stack.
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#128260;</div>
+      <h3>Signal-driven outreach</h3>
+      <p style="font-size: 13px;">
+        When the living database detects a signal &mdash; a restaurant crossing 500 reviews,
+        switching from The Fork, or launching a new website &mdash; it automatically triggers
+        a personalized outreach sequence with that specific trigger as the hook.
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-icon">&#128200;</div>
+      <h3>Continuous monitoring</h3>
+      <p style="font-size: 13px;">
+        Monthly re-scraping of all 15,993 TAM restaurants. The snapshot system tracks rating
+        changes, review growth, booking system switches, and new restaurant discoveries.
+        Every change is a potential sales trigger.
+      </p>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top: 24px;">
+    <strong>The end goal:</strong> An automatic enrichment, analysis, and campaign launcher in one.
+    Without having to work and maintain Clay tables. The entire pipeline runs autonomously &mdash;
+    new restaurants are discovered, profiled, scored, and entered into outreach sequences without
+    human intervention.
+  </div>
+</section>
+
+<!-- SETUP -->
+<section>
+  <div class="section-label">Getting Started</div>
+  <h2>MCP server setup</h2>
+  <p>
+    Connect the restaurant intelligence database to Claude Desktop in five steps.
+    Once connected, anyone on the team can query the data through natural language.
+  </p>
+
+  <div class="setup-steps">
+    <div class="setup-step">
+      <h4>Create a Supabase project</h4>
+      <p>Go to <strong>supabase.com</strong> &rarr; New Project. The free tier handles 500+ restaurants easily.</p>
+    </div>
+    <div class="setup-step">
+      <h4>Run the migration</h4>
+      <p>Open the SQL Editor in Supabase and paste the contents of <code style="font-family: var(--font-mono); font-size: 12px; background: var(--gray-100); padding: 2px 6px; border-radius: 3px;">supabase_migration.sql</code>. This creates the restaurants, snapshots, signals, and outreach tables.</p>
+    </div>
+    <div class="setup-step">
+      <h4>Configure credentials</h4>
+      <p>Copy <code style="font-family: var(--font-mono); font-size: 12px; background: var(--gray-100); padding: 2px 6px; border-radius: 3px;">.env.example</code> to <code style="font-family: var(--font-mono); font-size: 12px; background: var(--gray-100); padding: 2px 6px; border-radius: 3px;">.env</code> and fill in your Supabase URL and service role key from Settings &rarr; API.</p>
+    </div>
+    <div class="setup-step">
+      <h4>Upload the data</h4>
+      <p>Run <code style="font-family: var(--font-mono); font-size: 12px; background: var(--gray-100); padding: 2px 6px; border-radius: 3px;">node upload_to_supabase.js</code> to load all 500 profiled restaurants into the database.</p>
+    </div>
+    <div class="setup-step">
+      <h4>Connect to Claude Desktop</h4>
+      <p>Add the MCP server to your Claude Desktop configuration:</p>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <code>
+<span class="comment">// Claude Desktop &rarr; Settings &rarr; Developer &rarr; Edit Config</span>
+{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"zenchef-intelligence"</span>: {
+      <span class="key">"command"</span>: <span class="string">"node"</span>,
+      <span class="key">"args"</span>: [<span class="string">"C:/path/to/poc/mcp-server/index.js"</span>],
+      <span class="key">"env"</span>: {
+        <span class="key">"SUPABASE_URL"</span>: <span class="string">"https://your-project.supabase.co"</span>,
+        <span class="key">"SUPABASE_SERVICE_KEY"</span>: <span class="string">"your-service-role-key"</span>
+      }
+    }
+  }
+}
+    </code>
+  </div>
+
+  <p style="font-size: 13px; color: var(--gray-500); margin-top: 16px;">
+    After restarting Claude Desktop, you'll see the Zenchef tools available in the tool picker.
+    Start by asking <em>"Show me the dashboard"</em> to see an overview of all 500 restaurants.
+  </p>
+</section>
+
+<!-- TIMELINE -->
+<section>
+  <div class="section-label">Roadmap</div>
+  <h2>From here to production</h2>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-dot done"></div>
+      <div class="timeline-title">PoC: 500 restaurants profiled &amp; scored</div>
+      <div class="timeline-desc">HTTP scraping, 10-factor ICP scoring, Supabase storage, MCP server</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot active"></div>
+      <div class="timeline-title">Supabase setup &amp; MCP connection</div>
+      <div class="timeline-desc">Upload data, connect Claude Desktop, validate with the team</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-title">Full TAM profiling (15,993 restaurants)</div>
+      <div class="timeline-desc">Scale from 500 to the full Netherlands market</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-title">Salesforce sync</div>
+      <div class="timeline-desc">Auto-create leads for hot prospects, sync score changes</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-title">Lemlist campaign automation</div>
+      <div class="timeline-desc">Signal-triggered outreach sequences with personalized messaging</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-title">Monthly monitoring &amp; signal detection</div>
+      <div class="timeline-desc">Continuous re-scraping, change detection, automated alerts</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section>
+  <div class="cta-section">
+    <h2>Ready to see it in action?</h2>
+    <p style="color: var(--gray-500); max-width: 520px; margin: 12px auto 28px;">
+      Set up the Supabase project and MCP connection to start querying
+      500 scored restaurants through Claude &mdash; or let's discuss scaling
+      to the full 15,993-restaurant TAM.
+    </p>
+    <a href="mailto:daan@shyft.ai" class="btn btn-primary">Get in touch</a>
+  </div>
+</section>
+
+<footer>
+  <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
+    <div class="logo-mark" style="width: 16px; height: 16px; border-radius: 3px;"></div>
+    <span style="font-weight: 600; color: var(--gray-500);">Shyft</span>
+  </div>
+  Prepared January 2026 &nbsp;&middot;&nbsp; Restaurant Intelligence PoC
+</footer>
+
+</body>
+</html>
